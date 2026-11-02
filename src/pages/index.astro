@@ -1,0 +1,217 @@
+---
+import '../styles/global.css';
+import { CARS, CAR_ORDER } from '../data/cars';
+
+const title = 'Anatomy — 911 GT3 RS & Tourbillon, taken apart in 3D';
+const description =
+  'An interactive 3D teardown of the Porsche 911 GT3 RS and the Bugatti Tourbillon. Scroll through, or explore every system: engine, gearbox, suspension, aero, hybrid drive.';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content="#ece8df" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body data-mode="scroll" data-car="gt3rs">
+    <canvas id="stage" aria-label="3D model of the selected car"></canvas>
+
+    <div class="veil" id="veil">
+      <div class="veil-inner">
+        <div class="spinner"></div>
+        <span>Building the model…</span>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <a class="brand" href="/">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="9" fill="none" stroke="currentColor" stroke-width="2.4"></circle><circle cx="16" cy="16" r="2.8" fill="var(--accent)"></circle><path d="M16 3v6M16 23v6M3 16h6M23 16h6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>
+        <span class="brand-name">Anatomy</span>
+        <span class="brand-sub">3D teardown</span>
+      </a>
+
+      <div class="top-controls">
+        <div class="seg" role="radiogroup" aria-label="View mode">
+          <button type="button" role="radio" data-mode-btn="scroll" aria-checked="true">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4.5" y="1.5" width="7" height="13" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.4"></rect><path d="M8 4.5v2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>
+            Scroll
+          </button>
+          <button type="button" role="radio" data-mode-btn="explore" aria-checked="false">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14 5v6l-6 3.5L2 11V5z M8 8l6-3M8 8 2 5M8 8v6.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"></path></svg>
+            Explore
+          </button>
+        </div>
+
+        <div class="car-select" id="carSelect">
+          <button type="button" class="car-select-btn" aria-haspopup="listbox" aria-expanded="false" id="carSelectBtn">
+            <span class="cs-maker" id="csMaker">{CARS.gt3rs.maker}</span>
+            <span class="cs-name" id="csName">{CARS.gt3rs.name}</span>
+            <svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+          </button>
+          <ul class="car-menu" role="listbox" id="carMenu" hidden>
+            {
+              CAR_ORDER.map((id) => {
+                const c = CARS[id];
+                return (
+                  <li role="option" data-car-opt={id} aria-selected={id === 'gt3rs' ? 'true' : 'false'} tabindex="0">
+                    <span class="opt-swatch" style={`background:${c.paints[0].color}`} />
+                    <span class="opt-text">
+                      <span class="opt-maker">{c.maker}</span>
+                      <span class="opt-name">{c.name}</span>
+                      <span class="opt-layout">{c.layout}</span>
+                    </span>
+                    <span class="opt-stat">{c.heroStats[0][0]}</span>
+                  </li>
+                );
+              })
+            }
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===================== Scroll story ===================== -->
+    <main id="story" aria-label="Scroll story">
+      {
+        CAR_ORDER.map((id) => {
+          const c = CARS[id];
+          return (
+            <div class="story" data-story={id}>
+              {c.chapters.map((ch, i) => (
+                <section class={`chapter ${i === 0 ? 'hero' : ''} ${i === c.chapters.length - 1 ? 'outro' : ''}`} data-index={i}>
+                  <div class="card">
+                    <p class="kicker">{ch.kicker}</p>
+                    {i === 0 ? (
+                      <h1>
+                        <span class="maker">{c.maker}</span>
+                        {c.name}
+                      </h1>
+                    ) : (
+                      <h2>{ch.title}</h2>
+                    )}
+                    <p class="body">{i === 0 ? c.tagline + ' ' + ch.body : ch.body}</p>
+                    {i === 0 && (
+                      <dl class="hero-stats">
+                        {c.heroStats.map(([v, l]) => (
+                          <div>
+                            <dt>{v}</dt>
+                            <dd>{l}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                    {ch.stats && (
+                      <dl class="stats">
+                        {ch.stats.map(([v, l]) => (
+                          <div>
+                            <dt>{v}</dt>
+                            <dd>{l}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                    {i === 0 && (
+                      <p class="scroll-hint">
+                        <span class="mouse" />
+                        Scroll to take it apart
+                      </p>
+                    )}
+                    {i === c.chapters.length - 1 && (
+                      <div class="cta-row">
+                        <button type="button" class="btn primary" data-goto-explore>
+                          Open Explore mode
+                        </button>
+                        <button type="button" class="btn" data-switch-car>
+                          Take apart the {CARS[CAR_ORDER.find((o) => o !== id)!].name} →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              ))}
+            </div>
+          );
+        })
+      }
+      <footer class="legal">
+        Fan-made, procedurally generated models for illustration. Not affiliated with or endorsed by Porsche AG or Bugatti
+        Automobiles. Figures are published manufacturer data; internal layouts are simplified.
+      </footer>
+    </main>
+
+    <nav class="rail" id="rail" aria-label="Chapters"></nav>
+
+    <!-- ===================== Explore UI ===================== -->
+    <aside class="info" id="info" aria-live="polite">
+      <p class="kicker" id="infoKicker"></p>
+      <h2 id="infoTitle"></h2>
+      <p class="body" id="infoBody"></p>
+      <dl class="spec" id="infoStats"></dl>
+      <div class="paints" id="paints" aria-label="Paint"></div>
+    </aside>
+
+    <div class="dock" id="dock">
+      <div class="chips" id="chips" role="toolbar" aria-label="Subsystems"></div>
+      <div class="controls">
+        <label class="slider">
+          <span>Assembled</span>
+          <input type="range" min="0" max="1" step="0.001" value="0" id="explode" aria-label="Explode amount" />
+          <span>Exploded</span>
+        </label>
+        <div class="toggles">
+          <button type="button" class="tbtn" id="xrayBtn" aria-pressed="false" title="X-ray (X)">X-ray</button>
+          <button type="button" class="tbtn" id="aeroBtn" aria-pressed="false" title="Aero (D)">DRS</button>
+          <button type="button" class="tbtn" id="soundBtn" aria-pressed="false" title="Sound">Sound</button>
+          <button type="button" class="tbtn" id="resetBtn" title="Reset view (R)">Reset</button>
+          <button type="button" class="tbtn throttle" id="throttleBtn" title="Hold Space">
+            <span>Hold to launch</span><kbd>Space</kbd>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="console" id="console" aria-label="Live telemetry">
+      <div class="c-head">
+        <span class="dot"></span> Dyno <span class="c-slow">motion at 1/16 speed</span>
+      </div>
+      <div class="c-row">
+        <svg class="tach" viewBox="0 0 120 120" id="tach" aria-hidden="true"></svg>
+        <div class="c-read">
+          <div class="big"><span id="kmh">0</span><small>km/h</small></div>
+          <div class="mid"><span id="gear">1</span><small>gear</small></div>
+          <div class="mid"><span id="ps">0</span><small>PS</small></div>
+        </div>
+      </div>
+      <div class="cyl" id="cyl" aria-hidden="true"></div>
+      <svg class="chart" viewBox="0 0 200 64" id="chart" aria-hidden="true"></svg>
+      <div class="c-foot">
+        <div class="batt" id="batt" hidden>
+          <span>Battery</span>
+          <div class="bar"><i id="battFill"></i></div>
+          <b id="battPct">82%</b>
+          <span class="epw"><b id="ePs">0</b> PS e</span>
+        </div>
+        <div class="launch"><span>0–100</span><b id="launch">—</b></div>
+      </div>
+    </aside>
+
+    <div class="tooltip" id="tooltip" hidden></div>
+    <div class="tour-badge" id="tourBadge" hidden>Auto tour · click anywhere to take control</div>
+
+    <script>
+      import '../scripts/app';
+    </script>
+  </body>
+</html>
